@@ -122,6 +122,7 @@ contract MarketNft is ERC721, Ownable {
 
         s_fractionalBalance[tokenId][address(this)] -= amount;
         s_fractionalBalance[tokenId][msg.sender] += amount;
+
         emit BuyFraction(msg.sender, tokenId, amount);
     }
 
