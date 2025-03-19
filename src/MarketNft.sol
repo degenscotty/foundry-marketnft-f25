@@ -17,10 +17,10 @@ contract MarketNft is ERC721, Ownable {
     error MarketNFT__InsufficientPayment();
     error MarketNFT__InsufficientSupply();
     error MarketNFT__InsufficientBalance();
-    error MarketNFT__TransferFailed();
-    error MarketNFT__NotEnoughBalance();
-    error MarketNFT__InsufficientFraction();
-    error MarketNFT_Fallback();
+    error MarketNFT__InsufficientFractions();
+    error MarketNFT__WithdrawFailed();
+    error MarketNFT__Fallback();
+    error MarketNFT__PayoutFailed();
 
     /*//////////////////////////////////////////////////////////////
                            TYPE DECLARATIONS
@@ -89,7 +89,7 @@ contract MarketNft is ERC721, Ownable {
         uint256 fractions
     ) public onlyOwner {
         uint256 newTokenId = s_tokenCounter;
-        
+
         // Store metadata directly at mint time
         s_tokenMetadata[newTokenId] = TokenMetadata({
             name: name,
@@ -97,10 +97,10 @@ contract MarketNft is ERC721, Ownable {
             location: location,
             image: imageUri
         });
-        
+
         // Store image URI for backward compatibility
         s_tokenIdToUri[newTokenId] = imageUri;
-        
+
         _safeMint(msg.sender, newTokenId);
 
         s_fractionalSupply[newTokenId] = fractions;
@@ -130,7 +130,7 @@ contract MarketNft is ERC721, Ownable {
      */
     function sellFraction(uint256 tokenId, uint256 amount) public payable exists(tokenId) {
         if (s_fractionalBalance[tokenId][msg.sender] < amount) {
-            revert MarketNFT__InsufficientFraction();
+            revert MarketNFT__InsufficientFractions();
         }
 
         if (address(this).balance < s_fractionPrice * amount) {
@@ -143,7 +143,7 @@ contract MarketNft is ERC721, Ownable {
         uint256 payment = s_fractionPrice * amount;
         (bool success, ) = payable(msg.sender).call{value: payment}("");
         if (!success) {
-            revert MarketNFT__TransferFailed();
+            revert MarketNFT__PayoutFailed();
         }
         emit SellFraction(msg.sender, tokenId, amount);
     }
@@ -157,7 +157,7 @@ contract MarketNft is ERC721, Ownable {
         uint256 balance = address(this).balance;
         (bool success, ) = payable(msg.sender).call{value: balance}("");
         if (!success) {
-            revert MarketNFT__TransferFailed();
+            revert MarketNFT__WithdrawFailed();
         }
         emit Withdraw(msg.sender, balance);
     }
@@ -249,10 +249,10 @@ contract MarketNft is ERC721, Ownable {
     }
 
     fallback() external payable {
-        revert MarketNFT_Fallback();
+        revert MarketNFT__Fallback();
     }
 
     receive() external payable {
-        revert MarketNFT_Fallback();
+        revert MarketNFT__Fallback();
     }
 }
