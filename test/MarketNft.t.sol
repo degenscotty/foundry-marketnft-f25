@@ -52,15 +52,15 @@ contract MarketNftTest is Test {
     function test_MintNftAsOwner() public {
         vm.prank(owner);
         marketNft.mintNft(propertyName, propertyDesc, propertyLoc, tokenUri, 1000);
-        
+
         assertEq(marketNft.ownerOf(0), owner);
         assertEq(marketNft.getTokenCounter(), 1);
         assertEq(marketNft.getFractionalSupply(0), 1000);
         assertEq(marketNft.getFractionalBalance(0, address(marketNft)), 1000);
         assertEq(marketNft.getTokenIdToUri(0), tokenUri);
-        
-        (string memory name, string memory desc, string memory loc, string memory img) = 
-            marketNft.s_tokenMetadata(0);
+
+        (string memory name, string memory desc, string memory loc, string memory img) = marketNft
+            .s_tokenMetadata(0);
         assertEq(name, propertyName);
         assertEq(desc, propertyDesc);
         assertEq(loc, propertyLoc);
@@ -138,7 +138,7 @@ contract MarketNftTest is Test {
         marketNft.mintNft(propertyName, propertyDesc, propertyLoc, tokenUri, 1000);
 
         vm.prank(user1);
-        vm.expectRevert(MarketNft.MarketNFT__InsufficientFraction.selector);
+        vm.expectRevert(MarketNft.MarketNFT__InsufficientFractions.selector);
         marketNft.sellFraction(0, 100);
     }
 
@@ -210,8 +210,8 @@ contract MarketNftTest is Test {
         vm.prank(owner);
         marketNft.setTokenMetadata(0, "TestName", "TestDesc", "TestLoc", "TestImage");
 
-        (string memory name, string memory desc, string memory loc, string memory img) = 
-            marketNft.s_tokenMetadata(0);
+        (string memory name, string memory desc, string memory loc, string memory img) = marketNft
+            .s_tokenMetadata(0);
         assertEq(name, "TestName");
         assertEq(desc, "TestDesc");
         assertEq(loc, "TestLoc");
@@ -235,21 +235,21 @@ contract MarketNftTest is Test {
     function test_TokenURIContent() public {
         vm.prank(owner);
         marketNft.mintNft(propertyName, propertyDesc, propertyLoc, tokenUri, 1000);
-        
+
         string memory uri = marketNft.tokenURI(0);
-        
+
         // Check that it starts with the correct prefix
         string memory prefix = "data:application/json;base64,";
         assertTrue(bytes(uri).length > bytes(prefix).length, "URI too short");
-        
+
         // Simple verification that the URI contains expected metadata
         // This test doesn't decode the Base64 content but verifies the URI is formed correctly
         // and that tokenURI doesn't revert for a valid token
         assertTrue(bytes(uri).length > 0, "Empty token URI");
-        
+
         // Additional verification by checking metadata values directly
-        (string memory name, string memory desc, string memory loc, string memory img) = 
-            marketNft.s_tokenMetadata(0);
+        (string memory name, string memory desc, string memory loc, string memory img) = marketNft
+            .s_tokenMetadata(0);
         assertEq(name, propertyName);
         assertEq(desc, propertyDesc);
         assertEq(loc, propertyLoc);
@@ -269,13 +269,13 @@ contract MarketNftTest is Test {
 
     function test_FallbackReverts() public {
         vm.prank(user1);
-        vm.expectRevert(MarketNft.MarketNFT_Fallback.selector);
+        vm.expectRevert(MarketNft.MarketNFT__Fallback.selector);
         address(marketNft).call{value: 1 ether}("");
     }
 
     function test_ReceiveReverts() public {
         vm.prank(user1);
-        vm.expectRevert(MarketNft.MarketNFT_Fallback.selector);
+        vm.expectRevert(MarketNft.MarketNFT__Fallback.selector);
         payable(address(marketNft)).transfer(1 ether);
     }
 }
