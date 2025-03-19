@@ -133,7 +133,6 @@ contract MarketNft is ERC721, Ownable {
         if (s_fractionalBalance[tokenId][msg.sender] < amount) {
             revert MarketNFT__InsufficientFractions();
         }
-
         if (address(this).balance < s_fractionPrice * amount) {
             revert MarketNFT__InsufficientBalance();
         }
@@ -146,20 +145,24 @@ contract MarketNft is ERC721, Ownable {
         if (!success) {
             revert MarketNFT__PayoutFailed();
         }
+
         emit SellFraction(msg.sender, tokenId, amount);
     }
 
     function setNewFractionPrice(uint256 newPrice) public onlyOwner {
         s_fractionPrice = newPrice;
+
         emit FractionPriceUpdated(newPrice);
     }
 
     function withdraw() public onlyOwner {
         uint256 balance = address(this).balance;
+
         (bool success, ) = payable(msg.sender).call{value: balance}("");
         if (!success) {
             revert MarketNFT__WithdrawFailed();
         }
+
         emit Withdraw(msg.sender, balance);
     }
 
@@ -189,12 +192,8 @@ contract MarketNft is ERC721, Ownable {
         uint256 tokenId
     ) public view override exists(tokenId) returns (string memory) {
         TokenMetadata memory metadata = s_tokenMetadata[tokenId];
-        string memory imageURI = bytes(metadata.image).length > 0
-            ? metadata.image
-            : s_tokenIdToUri[tokenId];
 
         // Get the name (custom or contract default)
-        string memory tokenName = bytes(metadata.name).length > 0 ? metadata.name : name();
         return
             string(
                 abi.encodePacked(
@@ -203,13 +202,13 @@ contract MarketNft is ERC721, Ownable {
                         bytes(
                             abi.encodePacked(
                                 '{"name": "',
-                                tokenName,
+                                metadata.name,
                                 '", "description": "',
                                 metadata.description,
                                 '", "location": "',
                                 metadata.location,
                                 '", "image":"',
-                                imageURI,
+                                metadata.image,
                                 '"}'
                             )
                         )
